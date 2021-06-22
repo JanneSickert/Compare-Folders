@@ -1,8 +1,10 @@
 package compare;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class Main {
@@ -13,7 +15,7 @@ public class Main {
 	final static int NR_OF_THREADS = 7;
 	static MyThread[] thread = new MyThread[NR_OF_THREADS];
 	static int threadIndex = 0;
-	
+
 	public static void main(String[] args) {
 		String pathA = ui.askFolder1();
 		String pathB = ui.askFolder2();
@@ -48,7 +50,7 @@ public class Main {
 			ui.printFinding("The folders are not the same");
 		}
 	}
-	
+
 	static void joinAll() {
 		for (int i = 0; i < NR_OF_THREADS; i++) {
 			try {
@@ -58,7 +60,7 @@ public class Main {
 			}
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @return true if the folders are the same.
@@ -66,11 +68,12 @@ public class Main {
 	static boolean checkSame() {
 		int nr = 0;
 		for (int i = 0; i < same.length; i++) {
-			if (same[i]) nr++;
+			if (same[i])
+				nr++;
 		}
 		return (nr == same.length);
 	}
-	
+
 	static void compareFiles(File a, File b, int sameIndex) {
 		if (thread[threadIndex] == null) {
 			thread[threadIndex] = new MyThread(a, b, sameIndex);
@@ -94,7 +97,7 @@ public class Main {
 			} while (bb);
 		}
 	}
-	
+
 	public static class MyThread extends Thread{
 		
 		File a, b;
@@ -123,29 +126,13 @@ public class Main {
 		}
 		
 		private byte[] makeFileToByteArr(File currentFile) {
-			byte[] fileInBytes = null;
-			FileInputStream fis = null;
+			Path path = Paths.get(currentFile.getAbsolutePath());
 			try {
-				fis = new FileInputStream(currentFile);
-				long size = currentFile.length();
-				fileInBytes = new byte[(int) size];
-				int by, i = 0;
-				while ((by = fis.read()) != -1) {
-					fileInBytes[i++] = (byte) by;
-				}
-			} catch (IOException ex) {
-				System.out.println(ex);
-				System.out.println("Cant't make file to bytes.");
-				System.exit(0);
-			} finally {
-				if (fis != null)
-					try {
-						fis.close();
-					} catch (Exception ex) {
-						ex.printStackTrace();
-					}
+				return (Files.readAllBytes(path));
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
 			}
-			return fileInBytes;
 		}
 	}
 	
