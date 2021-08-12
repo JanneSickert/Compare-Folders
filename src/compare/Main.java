@@ -1,6 +1,8 @@
 package compare;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -97,11 +99,16 @@ public class Main {
 			} while (bb);
 		}
 	}
+	
+	static synchronized void setSame(int sameIndex, boolean theSame) {
+		Main.same[sameIndex] = theSame;
+	}
 
 	public static class MyThread extends Thread{
 		
 		File a, b;
 		int sameIndex = -1;
+		final long MAX_SPACE = Integer.MAX_VALUE - 255;
 		
 		MyThread(File a, File b, int sameIndex) {
 			this.a = a;
@@ -112,17 +119,44 @@ public class Main {
 		@Override
 		public void run() {
 			ui.checkFolder(a.getAbsolutePath(), b.getAbsolutePath());
-			byte[] b_a = makeFileToByteArr(a), b_b = makeFileToByteArr(b);
-			boolean theSame = (a.length() == b.length());
+			long len_a = a.length(), len_b = b.length();
+			boolean theSame = (len_a == len_b);
 			if (theSame) {
-				for (int i = 0; i < b_b.length; i++) {
-					if (!(b_a[i] == b_b[i])) {
-						theSame = false;
-						break;
+				if (len_a < MAX_SPACE) {
+					byte[] b_a = makeFileToByteArr(a), b_b = makeFileToByteArr(b);
+					for (int i = 0; i < b_b.length; i++) {
+						if (!(b_a[i] == b_b[i])) {
+							theSame = false;
+							break;
+						}
+					}
+				} else {
+					try {
+						FileInputStream is_a = new FileInputStream(a);
+						FileInputStream is_b = new FileInputStream(b);
+						int ret1 = 0, ret2 = 0;
+						do {
+							ret1 = is_a.read();
+							ret2 = is_b.read();
+							if (ret1 != ret2) {
+								theSame = false;
+								break;
+							}
+							System.out.println("buffer1:" + ret1);
+							System.out.println("buffer2:" + ret2);
+						} while (ret1 > 0 && ret2 > 0);
+						is_a.close();
+						is_b.close();
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+						System.exit(1);
+					} catch (IOException e) {
+						e.printStackTrace();
+						System.exit(2);
 					}
 				}
 			}
-			Main.same[sameIndex] = theSame;
+			Main.setSame(sameIndex, theSame);
 		}
 		
 		private byte[] makeFileToByteArr(File currentFile) {
