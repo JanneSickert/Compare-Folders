@@ -56,7 +56,9 @@ public class Main {
 	static void joinAll() {
 		for (int i = 0; i < NR_OF_THREADS; i++) {
 			try {
-				thread[i].join();
+				if (thread[i] != null) {
+					thread[i].join();
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
