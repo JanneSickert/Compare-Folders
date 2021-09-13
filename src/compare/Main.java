@@ -1,5 +1,6 @@
 package compare;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -134,27 +135,21 @@ public class Main {
 					}
 				} else {
 					try {
-						FileInputStream is_a = new FileInputStream(a);
-						FileInputStream is_b = new FileInputStream(b);
-						int ret1 = 0, ret2 = 0;
-						do {
-							ret1 = is_a.read();
-							ret2 = is_b.read();
-							if (ret1 != ret2) {
+						FileInputStream fin_a = new FileInputStream(a.getAbsolutePath());
+						FileInputStream fin_b = new FileInputStream(b.getAbsolutePath());
+						BufferedInputStream bufin_a = new BufferedInputStream(fin_a);
+						BufferedInputStream bufin_b = new BufferedInputStream(fin_b);
+						int data_a = 0, data_b = 0;
+						while (((data_a = bufin_a.read()) != -1) && (data_b = bufin_b.read()) != -1) {
+							if (data_a != data_b) {
 								theSame = false;
 								break;
 							}
-							System.out.println("buffer1:" + ret1);
-							System.out.println("buffer2:" + ret2);
-						} while (ret1 > 0 && ret2 > 0);
-						is_a.close();
-						is_b.close();
+						}
 					} catch (FileNotFoundException e) {
 						e.printStackTrace();
-						System.exit(1);
 					} catch (IOException e) {
 						e.printStackTrace();
-						System.exit(2);
 					}
 				}
 			}
